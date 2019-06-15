@@ -139,6 +139,24 @@ public class dClient {
                             }
                         }
                         break;
+                    case "getperf":
+                        bw.write(cmd+'\0');
+                        bw.flush();
+                        buff = new char[4096];
+                        br.read(buff, 0, 4096);
+                        int spd = Integer.parseInt(Message.cleanBuff(buff));
+                        if(spd == -1){
+                            System.out.println("Bad URL");
+                        }
+                        else{
+                            if(spd > 1048576)
+                                System.out.println("Speed: " + (float) spd/1048576 + " MByte/s");
+                            else if(spd > 1024)
+                                System.out.println("Speed: " + (float) spd/1024 + " KByte/s");
+                            else
+                                 System.out.println("Speed: " + spd + " Byte/s");
+                        }
+                        break;
                     default:
                         bw.write(cmd+'\0');
                         bw.flush();

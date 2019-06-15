@@ -82,7 +82,7 @@ public class dTask extends Thread{
         }
     }
     
-    private static int getFileSize(URL url) {
+    public static int getFileSize(URL url) {
         URLConnection conn = null;
         try {
             conn = url.openConnection();

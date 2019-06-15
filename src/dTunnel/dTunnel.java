@@ -135,18 +135,54 @@ class dTunnel extends Thread{
                         }
                         break;
                     case "ls":
-                            File dFolder = new File("Download");
-                            File list[] = dFolder.listFiles();
-                            String out = "@202:REPLS";
-                            for(File item : list){
-                                if(item.isDirectory()){
-                                    out += "|" + item.getName() + "#" + "-D";
-                                }
-                                else{
-                                    out += "|" + item.getName() + "#" + item.length();
-                                }
+                        File dFolder = new File("Download");
+                        File list[] = dFolder.listFiles();
+                        String out = "@202:REPLS";
+                        for(File item : list){
+                            if(item.isDirectory()){
+                                out += "|" + item.getName() + "#" + "-D";
                             }
-                            bw.write(out+'\0');
+                            else{
+                                out += "|" + item.getName() + "#" + item.length();
+                            }
+                        }
+                        bw.write(out+'\0');
+                        break;
+                    case "getperf":
+                        URL url = new URL(mess.content);
+                        long spd = 0;
+                        int i = 0;
+                        byte dataBuffer[] = new byte[1024];
+                        if(!url.getFile().isEmpty()){
+                            String fname = url.getFile().split("/")[url.getFile().split("/").length-1];
+                            System.out.println("File name: " + fname);
+                            long fSize = dTask.getFileSize(url);
+                            System.out.println("File size: " + fSize);
+                            BufferedInputStream in = new BufferedInputStream(url.openStream());
+                            long start = System.currentTimeMillis();
+                            while(in.read(dataBuffer, 0, 1024)!=-1 && i<1024){
+                                i++;
+                            }
+                            long time = System.currentTimeMillis() - start;
+                            if(i >= 1024){
+                                spd = (i*1024*1000/time);
+                            }
+                            else {
+                                spd = (fSize*1000/time);
+                            }
+                        }
+                        else{
+                            spd = -1;
+                        }
+                        if(spd > 1048576)
+                            System.out.println("Speed: " + (float) spd/1048576 + " MByte/s");
+                        else if(spd > 1024)
+                            System.out.println("Speed: " + (float) spd/1024 + " KByte/s");
+                        else
+                             System.out.println("Speed: " + spd + " Byte/s");
+                        bw.write(Long.toString(spd)+'\0');
+                        bw.flush();
+                        break;
                     default:
                         bw.write("Unknow command!"+'\0');
                         bw.flush();
