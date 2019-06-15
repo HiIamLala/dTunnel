@@ -7,6 +7,7 @@ package dTunnel;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -102,7 +103,7 @@ public class dClient {
                                     System.out.println("File " + fName + " auhorized.");
                                     File ftr = new File("Received/"+fName);
                                     if(ftr.exists()){
-                                        ftr = new File(fName.split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+fName.split("\\.(?=[^\\.]+$)")[1]);
+                                        ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
                                     }
                                     receiveFile(ftr,conn,fSize);
                                 }
@@ -118,7 +119,7 @@ public class dClient {
                             System.out.println("File " + mess.content + " auhorized.");
                             File ftr = new File("Received/"+mess.content);
                             if(ftr.exists()){
-                                ftr = new File(mess.content.split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+mess.content.split("\\.(?=[^\\.]+$)")[1]);
+                                ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
                             }
                             receiveFile(ftr,conn,fSize);
                         }
@@ -183,18 +184,18 @@ public class dClient {
             FileOutputStream fos = new FileOutputStream(ftr);
             try {
                 long received = 0;
-                InputStream cis = conn.getInputStream();
+                DataInputStream cis = new DataInputStream(conn.getInputStream());
                 byte buff[] = new byte[16*1024];
                 while(received<fSize){
                     if((fSize-received)<16*1024){
                         buff = new byte[16*1024];
-                        cis.read(buff, 0, (int) (fSize-received));
+                        cis.readFully(buff, 0, (int) (fSize-received));
                         fos.write(buff, 0, (int)(fSize-received));
                         received+=(int)(fSize-received);
                     }
                     else{
                         buff = new byte[16*1024];
-                        cis.read(buff, 0, 16*1024);
+                        cis.readFully(buff, 0, 16*1024);
                         fos.write(buff, 0, 16*1024);
                         received+=16*1024;
                     }

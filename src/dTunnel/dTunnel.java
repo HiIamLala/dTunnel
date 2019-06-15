@@ -8,6 +8,7 @@ package dTunnel;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -190,7 +191,7 @@ class dTunnel extends Thread{
             System.out.println(fts.getName());
             FileInputStream fis = new FileInputStream(fts);
             try {
-                OutputStream cos = conn.getOutputStream();
+                DataOutputStream cos = new DataOutputStream(conn.getOutputStream());
                 long sent = 0;
                 long fSize = fts.length();
                 byte buff[] = new byte[16*1024];
