@@ -12,18 +12,11 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.io.Writer;
-import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -147,6 +140,7 @@ class dTunnel extends Thread{
                             }
                         }
                         bw.write(out+'\0');
+                        bw.flush();
                         break;
                     case "getperf":
                         URL url = new URL(mess.content);
@@ -182,6 +176,24 @@ class dTunnel extends Thread{
                              System.out.println("Speed: " + spd + " Byte/s");
                         bw.write(Long.toString(spd)+'\0');
                         bw.flush();
+                        break;
+                    case "clearall":
+                        if(su){
+                            File dDir = new File("Download");
+                            File listF[] = dDir.listFiles();
+                            String res = "";
+                            for(File item : listF){
+                                res += "Deleted " + item.getName() + "\n";
+                                item.delete();
+                            }
+                            res += "Total " + listF.length + " files.\n";
+                            bw.write(res+'\0');
+                            bw.flush();
+                        }
+                        else{
+                            bw.write("You don't have permission."+'\0');
+                            bw.flush();
+                        }
                         break;
                     default:
                         bw.write("Unknow command!"+'\0');

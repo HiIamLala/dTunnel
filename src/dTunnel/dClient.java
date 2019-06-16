@@ -96,36 +96,22 @@ public class dClient {
                         bw.flush();
                         String fName = "";
                         long fSize=0;
-                        if(!(fName = checkURL(br).split("\\|")[0]).isEmpty()){
+                        if(!(fName = rTask.checkURL(br).split("\\|")[0]).isEmpty()){
                             System.out.println("File name: " + fName);
                             if(getServerProgress(br,fName,fSize)==100){
-                                if((fSize = authFile(fName, bw, br))!=-1){
-                                    System.out.println("File " + fName + " auhorized.");
-                                    File ftr = new File("Received/"+fName);
-                                    if(ftr.exists()){
-                                        ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
-                                    }
-                                    receiveFile(ftr,conn,fSize);
-                                }
-                                else{
-                                    System.out.println("File " + fName + " auhorized fail.");
-                                }
+                                rTask receive = new rTask(fName,conn);
+                                receive.start();
+                                spdC rCal = new spdC(receive, 2);
+                                rCal.start();
                             }
                         }
                         break;
                     case "down":
-                        System.out.println("Requesting file " + mess.content);
-                        if((fSize = authFile(mess.content, bw, br))!=-1){
-                            System.out.println("File " + mess.content + " auhorized.");
-                            File ftr = new File("Received/"+mess.content);
-                            if(ftr.exists()){
-                                ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
-                            }
-                            receiveFile(ftr,conn,fSize);
-                        }
-                        else{
-                                System.out.println("File " + mess.content + " auhorized fail.");
-                        }
+                        rTask receive = new rTask(mess.content,conn);
+                        receive.start();
+                        spdC rCal = new spdC(receive, 2);
+                        rCal.start();
+                        while(!receive.done){}
                         break;
                     case "ls":
                         bw.write(cmd+'\0');
@@ -169,88 +155,6 @@ public class dClient {
         } catch (IOException ex) {
             Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    private static long authFile(String fName, BufferedWriter bw, BufferedReader br) {
-        float progress = 0;
-        File ftr = new File("Received/"+fName);
-        try {
-            bw.write("/down "+fName+'\0');
-            bw.flush();
-            char buff[] = new char[4096];
-            br.read(buff, 0, 4096);
-            long received = 0;
-            if(new String(buff,0,7).equalsIgnoreCase("@200:OK")){
-                long fSize = Long.parseLong(Message.cleanBuff(buff).split("\\|")[1]);
-                System.out.println("File size: " + fSize);
-                bw.write("@201:CONFIRM|"+fSize+'\0');
-                bw.flush();
-                return fSize;
-            }
-            else{
-                System.out.println(Message.cleanBuff(buff));
-                return -1;
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
-            return -1;
-        }
-    }
-
-    private static void receiveFile(File ftr, Socket conn, long fSize) {
-        try {
-            FileOutputStream fos = new FileOutputStream(ftr);
-            try {
-                long received = 0;
-                DataInputStream cis = new DataInputStream(conn.getInputStream());
-                byte buff[] = new byte[16*1024];
-                while(received<fSize){
-                    if((fSize-received)<16*1024){
-                        buff = new byte[16*1024];
-                        cis.readFully(buff, 0, (int) (fSize-received));
-                        fos.write(buff, 0, (int)(fSize-received));
-                        received+=(int)(fSize-received);
-                    }
-                    else{
-                        buff = new byte[16*1024];
-                        cis.readFully(buff, 0, 16*1024);
-                        fos.write(buff, 0, 16*1024);
-                        received+=16*1024;
-                    }
-                    System.out.print("\rReceived " + (received/fSize)*100 + "%");
-                }
-                System.out.println();
-                fos.close();
-            } catch (IOException ex) {
-                Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    private static String checkURL(BufferedReader br) {
-        String fName = "";
-        String fSize = "";
-        try {
-            char buff[] = new char[4096];
-            br.read(buff, 0, 4096);
-            if(Message.cleanBuff(buff).equalsIgnoreCase("@404:BADURL")){
-                System.out.println("Bad URL.");
-            }
-            else if(new String(buff,0,7).equalsIgnoreCase("@200:OK")) {
-                fName += Message.cleanBuff(buff).split("\\|")[1];
-                System.out.println("File name: "+ fName);
-                fSize += Message.cleanBuff(buff).split("\\|")[2];
-                System.out.println("File size: "+ fSize);
-            }
-            else {
-                System.out.println(Message.cleanBuff(buff));
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return fName+"|"+fSize;
     }
     
     Message decodeCmd(String cmd){
