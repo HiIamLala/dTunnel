@@ -99,19 +99,61 @@ public class dClient {
                         if(!(fName = rTask.checkURL(br).split("\\|")[0]).isEmpty()){
                             System.out.println("File name: " + fName);
                             if(getServerProgress(br,fName,fSize)==100){
-                                rTask receive = new rTask(fName,conn);
-                                receive.start();
-                                spdC rCal = new spdC(receive, 2);
-                                rCal.start();
+                                if((fSize = rTask.authFile(fName, bw, br))!=-1){
+                                    System.out.println("File " + fName + " auhorized.");
+                                    File ftr = new File("Received/" + fName);
+                                    if(ftr.exists()){
+                                        ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
+                                    }
+                                    else{
+                                        ftr.createNewFile();
+                                    }
+                                    rTask receive = new rTask(ftr, conn, fSize);
+                                    receive.start();
+                                    spdC rCal = new spdC(receive, 2);
+                                    rCal.start();
+                                    while(!receive.done){
+                                        try {
+                                            Thread.sleep(2000);
+                                        } catch (InterruptedException ex) {
+                                            Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    }
+                                    System.out.println("\nDone");
+                                }
+                                else{
+                                    System.out.println("File " + fName + " auhorized fail.");
+                                }
                             }
                         }
                         break;
                     case "down":
-                        rTask receive = new rTask(mess.content,conn);
-                        receive.start();
-                        spdC rCal = new spdC(receive, 2);
-                        rCal.start();
-                        while(!receive.done){}
+                        System.out.println("Requesting file " + mess.content);
+                        if((fSize = rTask.authFile(mess.content, bw, br))!=-1){
+                            System.out.println("File " + mess.content + " auhorized.");
+                            File ftr = new File("Received/" + mess.content);
+                            if(ftr.exists()){
+                                ftr = new File("Received/"+ftr.getName().split("\\.(?=[^\\.]+$)")[0]+"_new"+"."+ftr.getName().split("\\.(?=[^\\.]+$)")[1]);
+                            }
+                            else{
+                                ftr.createNewFile();
+                            }
+                            rTask receive = new rTask(ftr, conn, fSize);
+                            receive.start();
+                            spdC rCal = new spdC(receive, 2);
+                            rCal.start();
+                            while(!receive.done){
+                                try {
+                                    Thread.sleep(2000);
+                                } catch (InterruptedException ex) {
+                                    Logger.getLogger(dClient.class.getName()).log(Level.SEVERE, null, ex);
+                                }
+                            }
+                            System.out.println("\nDone");
+                        }
+                        else{
+                            System.out.println("File " + mess.content + " auhorized fail.");
+                        }
                         break;
                     case "ls":
                         bw.write(cmd+'\0');

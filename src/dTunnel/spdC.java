@@ -57,9 +57,15 @@ class spdC extends Thread{
         }
         else if(type == 2){
             while(!receive.done){
+                if(receive.speed > 1048576)
+                    System.out.print("\rDownloaded:  " + (float)receive.received*100/receive.fSize +"% | Speed: " + (float) receive.speed/1048576 + " MByte/s");
+                else if(receive.speed > 1024)
+                    System.out.print("\rDownloaded:  " + (float)receive.received*100/receive.fSize +"% | Speed: " + (float) receive.speed/1024 + " KByte/s");
+                else
+                     System.out.print("\rDownloaded:  " + (float)receive.received*100/receive.fSize +"% | Speed: " + receive.speed + " Byte/s");
                 receive.count = 0;
                 try {
-                        sleep(interval*1000);
+                    sleep(interval*1000);
                 } catch (InterruptedException ex) {
                     Logger.getLogger(spdC.class.getName()).log(Level.SEVERE, null, ex);
                 }
